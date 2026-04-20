@@ -638,11 +638,11 @@
         }
 
         function updateUI() {
+            isTransitioning = false;
             const item = dataZikir[mode][idx];
             count = parseInt(item.r);
-            const card = document.getElementById('zikir-card');
-            
-            card.innerHTML = `
+
+            document.getElementById('zikir-card').innerHTML = `
                 <div class="title-zikir">${item.j}</div>
                 <div class="arabic">${item.a}</div>
                 <div class="action-group">
@@ -654,80 +654,13 @@
                 <div class="arti-box"><span class="arti-label">ARTINYA</span>${item.t}</div>
             `;
 
-            // Reset Card View
-            card.style.transition = 'none';
-            card.style.transform = 'translateX(0)';
-            card.style.opacity = '1';
-
-            // Reset Button Counter
-            const btn = document.getElementById('counterBtn');
-            btn.innerHTML = `<span>${count}</span>`;
-            btn.classList.remove('done');
-
-            // Controls & Progress
+            document.getElementById('counterBtn').innerHTML = `<span>${count}</span>`;
+            document.getElementById('counterBtn').classList.remove('done');
             document.getElementById('btnPrev').disabled = (idx === 0);
             document.getElementById('btnNext').disabled = (idx === dataZikir[mode].length - 1);
             document.getElementById('progress-bar').style.width = ((idx + 1) / dataZikir[mode].length * 100) + '%';
             document.getElementById('status-title').innerText = `ZIKIR ${mode.toUpperCase()} (${idx + 1}/${dataZikir[mode].length})`;
-            
-            // KUNCI PENTING: Kembalikan status lock setelah UI selesai dirender
-            setTimeout(() => { 
-                card.style.transition = 'transform 0.3s ease-out, opacity 0.3s';
-                isTransitioning = false; 
-            }, 50);
         }
-
-        function changeSlide(dir) {
-            if (isTransitioning) return;
-            if (dir === 1 && idx >= dataZikir[mode].length - 1) return;
-            if (dir === -1 && idx <= 0) return;
-
-            clearTimeout(autoSlideTimer);
-            isTransitioning = true;
-            const card = document.getElementById('zikir-card');
-            
-            card.style.transition = 'transform 0.3s ease-in, opacity 0.3s';
-            card.style.transform = `translateX(${dir === 1 ? -100 : 100}%)`;
-            card.style.opacity = '0';
-
-            setTimeout(() => {
-                idx += dir;
-                updateUI();
-                window.scrollTo(0, 0);
-            }, 300);
-        }
-
-        // --- GESTURE SECTION ---
-        const cardElement = document.getElementById('zikir-card');
-        cardElement.addEventListener('touchstart', (e) => {
-            if (isTransitioning) return;
-            startX = e.touches[0].clientX;
-            isDragging = true;
-            cardElement.style.transition = 'none';
-        }, {passive: true});
-
-        cardElement.addEventListener('touchmove', (e) => {
-            if (!isDragging || isTransitioning) return;
-            let currentX = e.touches[0].clientX;
-            let diffX = currentX - startX;
-            cardElement.style.transform = `translateX(${diffX}px)`;
-        }, {passive: true});
-
-        cardElement.addEventListener('touchend', (e) => {
-            if (!isDragging || isTransitioning) return;
-            isDragging = false;
-            let endX = e.changedTouches[0].clientX;
-            let diffX = endX - startX;
-            
-            if (Math.abs(diffX) > 80) {
-                if (diffX > 0 && idx > 0) changeSlide(-1);
-                else if (diffX < 0 && idx < dataZikir[mode].length - 1) changeSlide(1);
-                else cardElement.style.transform = 'translateX(0)';
-            } else {
-                cardElement.style.transform = 'translateX(0)';
-                cardElement.style.transition = 'transform 0.3s ease-out';
-            }
-        });
 
         function handleTap() {
             if (isTransitioning || count <= 0) return;
